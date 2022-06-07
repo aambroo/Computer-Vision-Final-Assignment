@@ -42,3 +42,13 @@ def detectFeatures (path_to_img: str, detector: str, color_correction: bool) -> 
     img_out = cv2.drawKeypoints(img, kp, None)              # Spit Out Image
     return img_out
 
+
+def drawKeyPoinst(img, key_points, out_image):
+    """
+    :param img: src image of key points
+    :param key_points: image's key points
+    :param out_image: image to draw key points on
+    :return: :param out_image: with :param key_points: drawn on
+    """
+    return cv2.drawKeypoints(img, key_points, out_image, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
