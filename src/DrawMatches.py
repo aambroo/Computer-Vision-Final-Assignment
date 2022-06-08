@@ -1,49 +1,59 @@
-import os.path
 import cv2
 
-# GLOBALS
-PATH_TO_OBJ = os.path.join(os.getcwd(), 'data', 'TrainMeter.png')
-PATH_TO_SCENE = os.path.join(os.getcwd(), 'data', 'Meters.png')
-NUM_FEATURES = 500
+PATH_TO_OBJ = '../data/TrainMeter.png'
+PATH_TO_SCENE = '../data/Meters.png'
+PATH_TO_VIDEO = '../data/Contesto_industriale1.mp4'
+NUM_FEATURES = 400
 
-# Images w/ Color Correction
-img_obj = cv2.imread(PATH_TO_OBJ, cv2.COLOR_BGR2GRAY)
-img_scene = cv2.imread(PATH_TO_SCENE, cv2.COLOR_BGR2GRAY)
-
-# INITS:
-# Sift
+# SIFT
 sift = cv2.SIFT_create(NUM_FEATURES)
-# Feature Matcher
+
+# FEATURE MATCHING
 bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
 
-# KeyPoints & Descriptors
-kp_obj, des_obj = sift.detectAndCompute(img_obj, None)
-kp_scene, des_scene = sift.detectAndCompute(img_obj, None)
+# Reading Scene and Object images
+scene_img = cv2.imread(PATH_TO_SCENE)
+obj_img = cv2.imread(PATH_TO_OBJ)
+# Color Correction
+scene_img = cv2.cvtColor(scene_img, cv2.COLOR_BGR2GRAY)
+obj_img = cv2.cvtColor(obj_img, cv2.COLOR_BGR2GRAY)
 
-# Matches
-# matches = bf.match(des_obj, des_scene)
-# all_matches = sorted(matches, key=lambda x: x.distance)
-# good_matches = list(filter(lambda x: x.distance < 150, matches))
-#
-# all_results = cv2.drawMatches(
-#     img_obj, kp_obj,
-#     img_scene, kp_scene,
-#     all_matches,
-#     img_scene,
-#     flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
-# )
-#
-# good_results = cv2.drawMatches(
-#     img_obj, kp_obj,
-#     img_scene, kp_scene,
-#     good_matches,
-#     img_scene,
-#     flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
-# )
+cap = cv2.VideoCapture(PATH_TO_VIDEO)
+while cap.isOpened():
+    ret, frame = cap.read()
+    sift_img = frame.copy()
+    # Key points, Descriptors
+    kp_1, des_1 = sift.detectAndCompute(sift_img, None)
+    kp_2, des_2 = sift.detectAndCompute(obj_img, None)
 
-# Showing Results
-cv2.imshow('OBJ', img_obj)
-cv2.imshow('SCENE', img_scene)
-#cv2.imshow('ALL', all_results)
-#cv2.imshow('GOOD', good_results)
-cv2.waitKey(0)
+    matches = bf.match(des_1, des_2)
+    matches = sorted(matches, key=lambda x: x.distance)
+
+
+    # All Matches
+    all_matches = cv2.drawMatches(
+        sift_img, kp_1,
+        obj_img, kp_2,
+        matches,
+        obj_img,
+        flags=2)
+    # Only 600 Matches
+    some_matches = cv2.drawMatches(
+        sift_img, kp_1,
+        obj_img, kp_2,
+        matches[:600],
+        obj_img,
+        flags=2)
+    # Only matches with distance smaller than 150
+    good_matches = cv2.drawMatches(
+        sift_img, kp_1,
+        obj_img, kp_2,
+        list(filter(lambda x: x.distance < 150, matches)),
+        obj_img,
+        flags=2)
+
+    cv2.imshow('ALL', all_matches)
+    cv2.imshow('SOME', some_matches)
+    cv2.imshow('GOOD', good_matches)
+    if cv2.waitKey(1) == ord('q'):
+        break
