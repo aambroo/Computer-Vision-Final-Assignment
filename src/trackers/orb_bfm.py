@@ -1,20 +1,24 @@
 import cv2
+from src.matchers import Matchers
+from src.detectors import Detectors
 import src.utils.color_coding as cc
 from src.utils.GLOBALS import MATCH_COLOR, KP_COLOR
 
-akaze = cv2.AKAZE_create()
+orb = cv2.ORB_create()
 bf = cv2.BFMatcher()
 
-cap = cv2.VideoCapture("../../data/Contesto_industriale1.mp4")
+cap = cv2.VideoCapture('../../data/Contesto_industriale1.mp4')
 
 prev_kp = None
 prev_des = None
+frames_count = 0    # init frame_count
+num_detections = 0  # init num_detections
 
 while cap.isOpened():
 
     ret, frame = cap.read()
     frame = cc.make_BW(frame)
-    kp, des = akaze.detectAndCompute(frame, None)
+    kp, des = orb.detectAndCompute(frame, None)
 
     if prev_kp is None:
         pass
@@ -37,9 +41,12 @@ while cap.isOpened():
             matchColor=MATCH_COLOR,
             flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
         )
-        cv2.imshow('AKAZE + BFM', img)
+        cv2.imshow('ORB + BFM', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        frames_count += 1
+        num_detections = len(good_matches)
 
     prev_kp = kp
     prev_des = des
